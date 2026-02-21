@@ -1,0 +1,123 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; MUPID Sokoban státusz sor
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+INIT_STATUS:
+    LD A, (ALL_PLACE_COUNTER) ; > 0
+    CP 0
+    RET Z
+    LD B, A
+    LD A, 0
+    LD (PLACED_COUNTER), A
+    LD (STEP_COUNTER), A
+    PUSH DE
+    PUSH BC
+    LD HL, STATUS_ORIGI
+    LD DE, STATUS_LINE
+    LD BC, STATUS_LINE-STATUS_ORIGI
+    LDIR
+    LD A, (CURRENT_LEVEL_BCD)
+    LD HL, CUR_LEVEL_POS
+    CALL BCD_PRINT_HL_A
+    POP BC
+    POP DE
+    LD HL, ALL_PLACE_POS
+INIT_STATUS_LOOP:
+    PUSH BC
+    CALL INC_STR_COUNTER_HL_PUSH
+    POP BC
+    DJNZ INIT_STATUS_LOOP
+
+    LD DE, HELP_LINE
+    CALL PRINTP_DE
+    LD HL, 0x02
+    CALL WAIT
+
+    RET
+INC_STR_COUNTER_HL_PUSH:
+    PUSH HL
+    JR INC_STR_COUNTER_HL
+
+SHOW_STATUS_Z: ; Z=1 if last
+    PUSH BC
+    PUSH DE
+
+;    LD HL, 0x0118
+;    LD DE, STATUS_LINE
+;    CALL PRINT0A_AT_HL_DE
+    LD HL, STATUS_LINE
+    CALL SYSERR
+
+    LD A, (PLACED_COUNTER)
+    LD B, A
+    LD A, (ALL_PLACE_COUNTER)
+    SUB B
+    POP DE
+    POP BC
+    RET
+
+INC_STEP_COUNTER:
+    PUSH HL
+    LD HL, STEP_COUNTER
+    INC (HL)
+    LD HL, CUR_STEP_POS ; Last 0
+    JR INC_STR_COUNTER_HL
+
+INC_PLACE_COUNTER:
+    PUSH HL
+    LD HL, PLACED_COUNTER
+    INC (HL)
+    LD HL, CUR_PLACE_POS ; Last 0
+INC_STR_COUNTER_HL:
+    INC (HL)
+    LD A, 0x3A
+    CP (HL)
+    JR NZ, INC_COUNTER_END
+    LD (HL), '0'
+    DEC HL
+    JR INC_STR_COUNTER_HL
+INC_COUNTER_END:
+;    CALL SHOW_STATUS
+    POP HL
+    RET
+
+DEC_PLACE_COUNTER:
+    PUSH HL
+    LD HL, PLACED_COUNTER
+    DEC (HL)
+    LD HL, CUR_PLACE_POS ; Last 0
+DEC_STR_COUNTER_HL:
+    DEC (HL)
+    LD A, 0x2F
+    CP (HL)
+    JR NZ, DEC_COUNTER_END
+    LD (HL), '0'
+    DEC HL
+    JR DEC_STR_COUNTER_HL
+DEC_COUNTER_END:
+;    CALL SHOW_STATUS
+    POP HL
+    RET
+
+STEP_COUNTER:	DB 0
+PLACED_COUNTER:	DB 0
+
+HELP_LINE:	DB 0x1F,0x58,0x41 ; Set cursor pos X=0x01 Y=0x17
+		DB 0x1B,"B","4",0x1B,"G",0x19,0x2C," "
+		DB 0x1B,"B","5",0x1B,"G",0x19,0x2F," "
+		DB 0x1B,"B","6",0x1B,"G",0x19,0x2C," "
+		DB 0x1B,"B","8",0x1B,"G",0x19,0x2D,"       "
+		DB 0x1B,"B","U",0x1B,"G","ndo     "
+		DB 0x1B,"B","R",0x1B,"G","etry    e" 
+		DB 0x1B,"B","X",0x1B,"G","it"
+		DB 0
+; HELP_LINE:	DB "4 5 6 8   Restart Undo Quit",0
+
+STATUS_ORIGI:	DB "Level:00  Step:00000  Placed:00/00",0x0A
+STATUS_LINE:	DS STATUS_LINE-STATUS_ORIGI, 0
+EMPTY_STATUS_LINE:	DS 33, ' '
+                        DB 0x0A
+CUR_LEVEL_POS	EQU STATUS_LINE + 6 ; First 0
+CUR_STEP_POS	EQU CUR_LEVEL_POS + 13 ; Last 0
+CUR_PLACE_POS	EQU CUR_STEP_POS + 11 ; Last 0
+ALL_PLACE_POS	EQU CUR_PLACE_POS + 3
