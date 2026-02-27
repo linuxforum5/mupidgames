@@ -34,10 +34,12 @@ KEY_SLOWER:
 	CP 1
 	JR c, KEY_SLOWER
     LD A, (KEYTMP)
+;;;;;;;;;;;;;;;; for debug only ;;;;;;;;;
 ;	CP 'N'
 ;	JP Z, NL
 ;	CP 'n'
 ;	JP Z, NL
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	CP 'X'
 	JP Z, RESTART
 	CP 'x'
@@ -130,7 +132,9 @@ NEXT_LEVEL:
     JR Z, START_LEVEL_HL
     LD HL, (NEXT_LEVEL_START_ADDR)
 START_LEVEL_HL:
+    PUSH HL
     CALL CLSC
+    POP HL
     CALL SHOW_NEXT_LEVEL_HL
     CALL SHOW_STATUS_Z
     RET
