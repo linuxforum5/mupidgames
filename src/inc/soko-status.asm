@@ -24,19 +24,23 @@ INIT_STATUS:
     LD HL, ALL_PLACE_POS
 INIT_STATUS_LOOP:
     PUSH BC
-    CALL INC_STR_COUNTER_HL_PUSH
+    ;CALL INC_STR_COUNTER_HL_PUSH
+    CALL _INC_STR_COUNTER_HL
     POP BC
     DJNZ INIT_STATUS_LOOP
 
+    LD HL, 0x0118
+    CALL APA   ; For puffer bug
     LD DE, HELP_LINE
     CALL PRINTP_DE
-    LD HL, 0x02
+
+    LD HL, 0x02   ; For puffer bug
     CALL WAIT
 
     RET
-INC_STR_COUNTER_HL_PUSH:
-    PUSH HL
-    JR INC_STR_COUNTER_HL
+;INC_STR_COUNTER_HL_PUSH:
+;    PUSH HL
+;    JR INC_STR_COUNTER_HL
 
 SHOW_STATUS_Z: ; Z=1 if last
     PUSH BC
@@ -61,25 +65,40 @@ INC_STEP_COUNTER:
     LD HL, STEP_COUNTER
     INC (HL)
     LD HL, CUR_STEP_POS ; Last 0
-    JR INC_STR_COUNTER_HL
+    CALL _INC_STR_COUNTER_HL
+    POP HL
+    RET
 
 INC_PLACE_COUNTER:
     PUSH HL
     LD HL, PLACED_COUNTER
     INC (HL)
     LD HL, CUR_PLACE_POS ; Last 0
-INC_STR_COUNTER_HL:
+    CALL _INC_STR_COUNTER_HL
+;;;;;;;;;;;;;;;;;;;;;;;;;
+;INC_STR_COUNTER_HL:
+;    INC (HL)
+;    LD A, 0x3A
+;    CP (HL)
+;    JR NZ, INC_COUNTER_END
+;    LD (HL), '0'
+;    DEC HL
+;    JR INC_STR_COUNTER_HL
+;INC_COUNTER_END:
+;;;;;;;;;;;;;;;;;;;;;;;;;
+;    CALL SHOW_STATUS
+    CALL PLAY_MOVE_TO_PLACE
+    POP HL
+    RET
+
+_INC_STR_COUNTER_HL:
     INC (HL)
     LD A, 0x3A
     CP (HL)
-    JR NZ, INC_COUNTER_END
+    RET NZ
     LD (HL), '0'
     DEC HL
-    JR INC_STR_COUNTER_HL
-INC_COUNTER_END:
-;    CALL SHOW_STATUS
-    POP HL
-    RET
+    JR _INC_STR_COUNTER_HL
 
 DEC_PLACE_COUNTER:
     PUSH HL
@@ -96,26 +115,26 @@ DEC_STR_COUNTER_HL:
     JR DEC_STR_COUNTER_HL
 DEC_COUNTER_END:
 ;    CALL SHOW_STATUS
+    CALL PLAY_MOVE_FROM_PLACE
     POP HL
     RET
 
 STEP_COUNTER:	DB 0
 PLACED_COUNTER:	DB 0
 
-HELP_LINE:	DB 0x1F,0x58,0x41 ; Set cursor pos X=0x01 Y=0x17
+HELP_LINE:	DB 0x1F,0x58,0x41                        ; Set cursor pos X=0x01 Y=0x17
 		DB 0x1B,"B","4",0x1B,"G",0x19,0x2C," "
 		DB 0x1B,"B","5",0x1B,"G",0x19,0x2F," "
-		DB 0x1B,"B","6",0x1B,"G",0x19,0x2C," "
+		DB 0x1B,"B","6",0x1B,"G",0x19,0x2E," "
 		DB 0x1B,"B","8",0x1B,"G",0x19,0x2D,"       "
 		DB 0x1B,"B","U",0x1B,"G","ndo     "
 		DB 0x1B,"B","R",0x1B,"G","etry    e" 
 		DB 0x1B,"B","X",0x1B,"G","it"
 		DB 0
-; HELP_LINE:	DB "4 5 6 8   Restart Undo Quit",0
 
 STATUS_ORIGI:	DB "Level:00  Step:00000  Placed:00/00",0x0A
 STATUS_LINE:	DS STATUS_LINE-STATUS_ORIGI, 0
-EMPTY_STATUS_LINE:	DS 33, ' '
+EMPTY_STATUS_LINE:	DS 34, ' '
                         DB 0x0A
 CUR_LEVEL_POS	EQU STATUS_LINE + 6 ; First 0
 CUR_STEP_POS	EQU CUR_LEVEL_POS + 13 ; Last 0

@@ -10,10 +10,11 @@
     ORG 0x8100
 
 START_X:
-	LD SP, 0x7600	 ; 67E6
-	CALL 0x0100	; Inint IO puffer
-;	CALL 0x014e	; Inint sys
+	LD SP, 0x77FF      ; 67E6
+	CALL 0x0100        ; Inint IO puffer
+;	CALL 0x014e        ; Inint sys
 	CALL INIT_KEYBOARD ;
+	CALL sound_init    ;
 RESTART:
 	CALL SHOW_START_SCREEN   ; HL-ben a kiválasztott level
 	; LD HL, LEVELS
@@ -27,13 +28,14 @@ IN_LEVEL:
 	LD (TM), HL
 KEY_SLOWER:
 	RST 0x30	; Wait for key pressed A:ASCII
+	; LD HL, 06d53h
 	LD (KEYTMP), A
 	LD HL, (TM)
 	LD A, H
 	OR L
 	CP 1
 	JR c, KEY_SLOWER
-    LD A, (KEYTMP)
+        LD A, (KEYTMP)
 ;;;;;;;;;;;;;;;; for debug only ;;;;;;;;;
 ;	CP 'N'
 ;	JP Z, NL
@@ -107,6 +109,7 @@ GO_UNDO:
     LD C, A
     SET 7, C
     CALL CHSCREEN
+    CALL PLAY_UNDO_SOUND
     POP HL
     JP WAIT_NEW_KEY
 
@@ -122,6 +125,7 @@ NEG_DE:
     RET
 
 NEXT_LEVEL:
+    CALL PLAY_END_OF_LEVEL_SOUND
     LD A, (CURRENT_LEVEL_BCD) 
     LD HL, FINISHED_LEVEL_POS
     CALL BCD_PRINT_HL_A
@@ -182,6 +186,7 @@ BG_IS_IN_C:                    ; C-ben a játékos eredeti helye alatt lévő ka
     CP EMPTY_BG                ; If empty
     JP Z, MOVE_OK              ;
 NOT_MOVE:                      ; Ha nem üres, 
+    CALL PLAY_NO_STEP_SOUND
     LD HL, (PLAYER_XY)
     JR SHOW_PLAYER             ; akkor azért még felé fordul, de már nem mozog
 MOVE_OK:                       ; Empty or placeholder or active magick wall
@@ -189,17 +194,16 @@ MOVE_OK:                       ; Empty or placeholder or active magick wall
     EX DE, HL                        ; DE-be kerül az új pozíció
     LD HL, (PLAYER_XY)               ; HL-be a játékos eredeti pozíciója van
     PUSH DE
-;    CALL SHOW_OBJECT_HL_C            ; C contains BG
-    CALL PUT_OBJECT_HL_C            ; C contains BG
-
+    CALL PUT_OBJECT_HL_C             ; C contains BG
     POP DE
     EX DE, HL                        ; HL-ben az új pozíció
     LD (PLAYER_XY), HL               ; Új pozíció mentése
+    CALL PLAY_STEP_SOUND             ; Elmozdulás hangja
 SHOW_PLAYER:
     CALL APA
     POP BC
-    SET 7, C
-    CALL CHSCREEN
+    SET 7, C                         ; DRCS
+    CALL CHSCREEN                    ; Display player in new pos
     JP WAIT_NEW_KEY
 
 ;TMP1:	DB 0
@@ -282,8 +286,8 @@ BOX_MOVE_OK:    ; B-ben a doboz alatt eredetileg lévő forma, C: a doboz új al
     CALL APA
     POP BC
     PUSH BC
-    SET 7, C
-    CALL CHSCREEN ; ok
+    SET 7, C                  ; DRCS
+    CALL CHSCREEN             ; ok 
     POP BC
     POP HL                    ; A doboz előző helye kerül a HL-be
     LD C, EMPTY_BG
@@ -333,9 +337,12 @@ GO_DOWN:
     LD C, 'D'
     JP MOVE_IF_OK
 
-INIT_KEYBOARD: ; IN A, (0x12h)
+INIT_KEYBOARD:
+    LD C, 0xFE
+    RST 0x20           ; Keyboard click sound off
     LD A, 1
-    LD (0x6D60), A
+    LD ( 0x6D60 ), A     ; Disable BTX write
+    ;CALL DIRECT_KEY_INIT
     RET
 
 INIT_PLAYER_HL_C:
@@ -359,12 +366,16 @@ include "inc/soko-constants.asm"
 include "inc/ROM.asm"
 include "inc/subs.asm"
 include "inc/bcd.asm"
+;include "inc/directKey.asm"
+;include "inc/key.asm"
+include "inc/hex.asm"
 ; include "inc/soko-sprites-data.asm"
 include "inc/soko-start-screen.asm"
 include "inc/soko-levels-data.asm"
 include "inc/soko-cur-level.asm"
 include "inc/soko-status.asm"
 include "inc/soko-message.asm"
+include "inc/soko-music.asm"
 ;include "inc/soko-debug.asm"
 
 SOKOMAP: ; DB SIZE_X * SIZE_Y, 0
