@@ -8,6 +8,7 @@ START:
     LD A, 1
     LD ( 0x6D60 ), A     ; Disable BTX write
 
+RESTART:
     CALL CLSC
 
     LD HL, 0x0303
@@ -30,6 +31,8 @@ START:
     LD HL, TextEnd2
     CALL SYSERR
 
+    JP RESTART
+
     CALL CLSC
 
     LD A, 0
@@ -45,3 +48,4 @@ include "inc/ROM.asm"
 include "inc/hex.asm"
 include "inc/glob.asm"
 include "inc/key.asm"
+;include "inc/sound.asm"
