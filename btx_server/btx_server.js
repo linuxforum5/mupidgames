@@ -28,7 +28,6 @@ var BTX_EINGABEZEILE = 	String.fromCharCode(0x1b) + // Hintergrund blau ganze Re
 						String.fromCharCode(0x83);
 
 var BTX_INIT_SCREEN = Buffer.from([
-// var BTX_INIT_SCREEN = new Buffer([
 		0x1f, 0x2f, 0x42,					// Grundzustand parallel
 		0x9b,
 		0x30, 0x32, 0x3b, 0x32, 0x33, 0x55,	// Scrollbereich ist Zeile 2 - 23
@@ -135,10 +134,11 @@ function process_serial_data (data) {
 
 function process_serial_byte (data) {
 	console.log("curr file is now: " + current_file);
+	const dataChar = String.fromCharCode(data);
 	if (trace) {
-		console.log("char received: " + data.charCodeAt(0) + " --> " + data);
+		console.log("char received: 0x" + data.toString(16) + " " + data + " --> " + dataChar );
 	};
-	var char_code = data.charCodeAt(0);
+	var char_code = data;
 	var echo_char = data;
 	// if the entered character is the first in the commandline and is a link to another page, send that other page
 	if ((command_line === "") && (links[data])) {
@@ -147,12 +147,12 @@ function process_serial_byte (data) {
 	}
 	else {
 		if (char_code === 19) { 		// map special characters (*, #) to readable form
-			echo_char = "*";
+//			echo_char = "*";
 		};
 		if (char_code === 28) {
-			echo_char = "#";
+//			echo_char = "#";
 		};
-////		write_serial( echo_char );		// echo character on the Btx terminal
+		write_serial( [data] );		// echo character on the Btx terminal
 		if ((char_code === 13) || (char_code === 26) || (char_code === 28)) { 	// if "Return", or "SEND", or "#" key was pressed
 			process_command(command_line, char_code);
 			command_line = "";
@@ -161,7 +161,7 @@ function process_serial_byte (data) {
 			command_line = command_line.substr(0, command_line.length - 1);
 		}
 		else {
-			command_line = command_line + data;
+			command_line = command_line + dataChar;
 		};
 	};
 };
