@@ -56,7 +56,6 @@ var infile_links	= {}; 		// Link information within the BTX file (Germany only?)
 var working_dir 	= "./pages/";
 var country			= "AT";
 var trace 			= true;
-var dataUnderProcess = false;
 
 // *** Get command line arguments: argument1 = name of serial port (e.g. COM2), argument2 = Baud rate (e.g. 4800);
 
@@ -97,14 +96,7 @@ serialPort.on("open", () => {
 });
 
 serialPort.on("data", (data) => {
-    if ( !dataUnderProcess ) {
-        dataUnderProcess = true;
-        // process_serial_data( data.toString( "latin1" ) );  //<------>process_serial_data(data.toString("binary"));
-        process_serial_data( Buffer.from( data ) );  //>process_serial_data(data.toString("binary"));
-        dataUnderProcess = false;
-    } else {
-        return;
-    }
+        process_serial_data( data );                          // process_serial_data(data.toString("binary"));
 });
 
 serialPort.on("error", (data) => {
@@ -137,7 +129,6 @@ function process_serial_data (data) {
 	};
 };
 
-
 function process_serial_byte (data) {
 	console.log("curr file is now: " + current_file);
 	const dataChar = String.fromCharCode(data);
@@ -145,20 +136,20 @@ function process_serial_byte (data) {
 		console.log("char received: 0x" + data.toString(16) + " " + data + " --> " + dataChar );
 	};
 	var char_code = data;
-	var echo_char = data;
+	var echo_char_code = data;
 	// if the entered character is the first in the commandline and is a link to another page, send that other page
 	if ((command_line === "") && (links[data])) {
 		console.log(echo_char + " link = " + links[data]);
 		send_file(links[data]); 
 	}
 	else {
-		if (char_code === 19) { 		// map special characters (*, #) to readable form
-//			echo_char = "*";
+		if ( char_code === 0x13 ) { // INI  map special characters (*, #) to readable form
+//			echo_char_code = 0x2A;  // "*";
 		};
-		if (char_code === 28) {
-//			echo_char = "#";
+		if (char_code === 0x1C ) {   // TER
+//			echo_char_code = 0x23;    // "#";
 		};
-		write_serial( [data] );		// echo character on the Btx terminal
+		write_serial( [ echo_char_code ] );		// echo character on the Btx terminal
 		if ((char_code === 13) || (char_code === 26) || (char_code === 28)) { 	// if "Return", or "SEND", or "#" key was pressed
 			process_command(command_line, char_code);
 			command_line = "";
