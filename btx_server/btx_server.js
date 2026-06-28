@@ -56,7 +56,7 @@ var infile_links	= {}; 		// Link information within the BTX file (Germany only?)
 var working_dir 	= "./pages/";
 var country			= "AT";
 var trace 			= true;
-
+var dataUnderProcess = false;
 
 // *** Get command line arguments: argument1 = name of serial port (e.g. COM2), argument2 = Baud rate (e.g. 4800);
 
@@ -97,8 +97,14 @@ serialPort.on("open", () => {
 });
 
 serialPort.on("data", (data) => {
-//	process_serial_data(data.toString("binary"));
-	process_serial_data(data.toString("latin1"));
+    if ( !dataUnderProcess ) {
+        dataUnderProcess = true;
+        // process_serial_data( data.toString( "latin1" ) );  //<------>process_serial_data(data.toString("binary"));
+        process_serial_data( Buffer.from( data ) );  //>process_serial_data(data.toString("binary"));
+        dataUnderProcess = false;
+    } else {
+        return;
+    }
 });
 
 serialPort.on("error", (data) => {
