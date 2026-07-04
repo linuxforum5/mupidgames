@@ -12,7 +12,7 @@
 // *** External modules
 
 var fs = require("fs");
-
+var debug = true;
 
 
 // *** Constants
@@ -138,16 +138,17 @@ function process_serial_byte (data) {
 	var char_code = data;
 	var echo_char_code = data;
 	// if the entered character is the first in the commandline and is a link to another page, send that other page
-	if ((command_line === "") && (links[data])) {
-		console.log(echo_char + " link = " + links[data]);
-		send_file(links[data]); 
+	// if ( debug ) console.log( "// command line: '" + command_line + "' data='" + dataChar + "'", links );
+	if ((command_line === "") && (links[dataChar])) {
+		if (debug) console.log( dataChar + " link = " + links[dataChar]);
+		send_file(links[dataChar]); 
 	}
 	else {
 		if ( char_code === 0x13 ) { // INI  map special characters (*, #) to readable form
-//			echo_char_code = 0x2A;  // "*";
+			echo_char_code = 0x2A;  // "*";
 		};
 		if (char_code === 0x1C ) {   // TER
-//			echo_char_code = 0x23;    // "#";
+			echo_char_code = 0x23;    // "#";
 		};
 		write_serial( [ echo_char_code ] );		// echo character on the Btx terminal
 		if ((char_code === 13) || (char_code === 26) || (char_code === 28)) { 	// if "Return", or "SEND", or "#" key was pressed
@@ -314,6 +315,7 @@ function process_command (cmd_line, terminating_character) {
 
 
 function send_file (file_name) {
+	if ( debug ) console.log( "Send file: '" + file_name + "'" );
 	// Find the linkage info for Austria (same file in info directory)
 	find_linkage_info_austria (file_name);
 	// Read and send the file itself
