@@ -12,7 +12,6 @@
 // *** External modules
 
 var fs = require("fs");
-var debug = true;
 
 
 // *** Constants
@@ -130,17 +129,15 @@ function process_serial_data (data) {
 };
 
 function process_serial_byte (data) {
-	console.log("curr file is now: " + current_file);
+	if (trace) console.log("curr file is now: " + current_file);
 	const dataChar = String.fromCharCode(data);
-	if (trace) {
-		console.log("char received: 0x" + data.toString(16) + " " + data + " --> " + dataChar );
-	};
+	if (trace) console.log("char received: 0x" + data.toString(16) + " " + data + " --> " + dataChar );
 	var char_code = data;
 	var echo_char_code = data;
 	// if the entered character is the first in the commandline and is a link to another page, send that other page
-	// if ( debug ) console.log( "// command line: '" + command_line + "' data='" + dataChar + "'", links );
+	// if ( trace ) console.log( "// command line: '" + command_line + "' data='" + dataChar + "'", links );
 	if ((command_line === "") && (links[dataChar])) {
-		if (debug) console.log( dataChar + " link = " + links[dataChar]);
+		if ( trace ) console.log( dataChar + " link = " + links[dataChar]);
 		send_file(links[dataChar]); 
 	}
 	else {
@@ -315,7 +312,7 @@ function process_command (cmd_line, terminating_character) {
 
 
 function send_file (file_name) {
-	if ( debug ) console.log( "Send file: '" + file_name + "'" );
+	if ( trace ) console.log( "Send file: '" + file_name + "'" );
 	// Find the linkage info for Austria (same file in info directory)
 	find_linkage_info_austria (file_name);
 	// Read and send the file itself
@@ -342,7 +339,7 @@ function find_linkage_info_austria (file_name) {
 	var link_file_exists = false;
 	try {
 		var link_file_buffer = fs.readFileSync(process.cwd() + "/info/" + file_name);
-		console.log("lfb = " + link_file_buffer);
+		if ( trace ) console.log("lfb = " + link_file_buffer);
 		link_file_exists = true;
 	}
 	catch (e) {
@@ -359,8 +356,10 @@ function find_linkage_info_austria (file_name) {
 				links[l.charAt(0)] = l.substr(1); 							// link is like so: 1 char = option, rest = file to load
 			};
 		};
-		var str = JSON.stringify(links, null, 4); // (Optional) beautifully indented output.
-		console.log("links = " + str);
+		if ( trace ) {;
+			var str = JSON.stringify(links, null, 4); // (Optional) beautifully indented output.
+			console.log("links = " + str);
+		};
 	};
 };
 
