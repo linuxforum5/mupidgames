@@ -2,13 +2,29 @@
 ;;; rutinok
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+RST_0x18:
+    PUSH DE
+    PUSH HL
+    PUSH BC
+    LD A, C
+    LD (RSTMP), A
+    LD HL, RSTMP
+    LD DE, 1
+    CALL BTX_PRINT_HL_DE
+    POP BC
+    POP HL
+    POP DE
+    RET
+
+RSTMP: DB 0
+
 SEND_SEQ_HL:
     LD A, (HL)
     CP 0
     RET Z
     PUSH HL
     LD C, A
-    RST 0x18
+    CALL RST_0x18
 ;    RST 0x18
     POP HL
     INC HL
@@ -35,7 +51,7 @@ PRINTP_LOOP:
     RET Z
     LD C, A
     PUSH DE
-    RST 0x18
+    CALL RST_0x18
 ;    RST 0x18
     ;CALL CHSCREEN
     POP DE
@@ -48,7 +64,7 @@ PRINTP_DE: ; Print over Puffer
     RET Z
     LD C, A
     PUSH DE
-    RST 0x18
+    CALL RST_0x18
     ;CALL CHSCREEN
     POP DE
     INC DE

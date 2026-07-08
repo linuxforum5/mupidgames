@@ -12,6 +12,7 @@ BSET2		EQU	0x010C
 BSET3		EQU	0x010F
 BUINI		EQU	0x0100
 CHSCREEN	EQU	0x001B	; write C character to current screen position, and move cursor. C in [ 0x20 - 0xFF ] exclude 0x9B
+BTX_PRINT_HL_DE	EQU	0x5BCC	; Display DE bytes from address HL as a BTX(CEPT) code.
 DOTINV		EQU	0x012A	; Invert Screen DOT. BC=X[0..319], E=Y[0..239] *:AF,BC,DE,HL,AF'
 HT		EQU	0x011E	; Horizontal Tab
 INTS0		EQU	0x0023
