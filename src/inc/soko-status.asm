@@ -31,8 +31,9 @@ INIT_STATUS_LOOP:
 
     LD HL, 0x0118
     CALL APA   ; For puffer bug
-    LD DE, HELP_LINE
-    CALL PRINTP_DE
+    LD HL, HELP_LINE
+    LD DE, HELP_LINE_END-HELP_LINE
+    CALL BTX_PRINT_HL_DE
 
     LD HL, 0x02   ; For puffer bug
     CALL WAIT
@@ -46,9 +47,6 @@ SHOW_STATUS_Z: ; Z=1 if last
     PUSH BC
     PUSH DE
 
-;    LD HL, 0x0118
-;    LD DE, STATUS_LINE
-;    CALL PRINT0A_AT_HL_DE
     LD HL, STATUS_LINE
     CALL SYSERR
 
@@ -130,7 +128,7 @@ HELP_LINE:	DB 0x1F,0x58,0x41                        ; Set cursor pos X=0x01 Y=0x
 		DB 0x1B,"B","U",0x1B,"G","ndo     "
 		DB 0x1B,"B","R",0x1B,"G","etry    e" 
 		DB 0x1B,"B","X",0x1B,"G","it"
-		DB 0
+HELP_LINE_END:
 
 STATUS_ORIGI:	DB "Level:00  Step:00000  Placed:00/00",0x0A
 STATUS_LINE:	DS STATUS_LINE-STATUS_ORIGI, 0

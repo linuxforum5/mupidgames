@@ -129,8 +129,9 @@ NEXT_LEVEL:
     LD A, (CURRENT_LEVEL_BCD) 
     LD HL, FINISHED_LEVEL_POS
     CALL BCD_PRINT_HL_A
-    LD DE, MESSAGE_LEVEL_FINISHED
-    CALL SHOW_MESSAGE_DE
+    LD HL, MESSAGE_LEVEL_FINISHED
+    LD DE, MESSAGE_LEVEL_FINISHED_END-MESSAGE_LEVEL_FINISHED
+    CALL SHOW_MESSAGE_HL_DE
     CALL INC_LEVEL_Z
     LD HL, LEVELS          ; Level 1
     JR Z, START_LEVEL_HL
@@ -364,7 +365,7 @@ INIT_PLAYER_HL_C:
 
 include "inc/soko-constants.asm"
 include "inc/ROM.asm"
-include "inc/subs.asm"
+include "inc/io.asm"
 include "inc/bcd.asm"
 ;include "inc/directKey.asm"
 ;include "inc/key.asm"
