@@ -16,6 +16,8 @@ START:
     LD DE, INIT_SCREEN_END-INIT_SCREEN
     CALL BTX_PRINT_HL_DE
 
+    CALL sound_init
+
     CALL PALETTE_REDEFINE
     LD A, SEGMENT_OFF_PALETTE
     CALL SEVSEG_SET_OFF_COLOR_PALETTE_A
@@ -23,14 +25,20 @@ START:
     LD HL, START_TEXT
     CALL SYSERR
 
-;    CALL DIRECT_TEST
-
-    CALL DIRECT_KEY_WAIT_A
+WAIT_FOR_BEGIN:
+    CALL DIRECT_KEY_GET_A_Z
     SET 5, A
     CP 'q'
     JP Z, END_GAME
+    CP 's'
+    JP Z, FIRST_PUZZLE
+    CP 'i'
+    JP NZ, WAIT_FOR_BEGIN
+    CALL SHOW_INFORMATION
+    ; JP START
+    JP WAIT_FOR_BEGIN
 
-
+FIRST_PUZZLE:
     LD A, 73
 START_GAME_A:
     CALL SHOW_PUZZLE_A
@@ -41,11 +49,6 @@ START_GAME_A:
     LD DE, INFO_TEXT_END-INFO_TEXT
     CALL BTX_PRINT_HL_DE
 
-    LD HL, PLAYER_NUMBERS
-    LD (HL), 0
-    LD DE, PLAYER_NUMBERS+1
-    LD BC, 4
-    LDIR
 
     LD HL, MESSAGE_CLEAR
     LD DE, MESSAGE_CLEAR_END-MESSAGE_CLEAR
@@ -53,8 +56,7 @@ START_GAME_A:
 
     LD HL, PLAY_TEXT
     CALL SYSERR
-    CALL DISPLAY_NUMBERS
-    CALL XOR_NUMBERS_TO_A
+    CALL CLEAR_PLAYER_NUMBERS_AND_DISPLAY
     CALL HIDE_HELP
 
     CALL CLOCK_START
@@ -66,8 +68,15 @@ IN_GAME:
     JR Z, END_GAME
     CP 'x'
     JR Z, GIVE_UP
-    CP 'h'
+    CP 's'
     CALL Z, SHOW_HELP1
+    CP 'i'
+    CALL Z, SHOW_INFORMATION
+    CP 'c'
+    CALL Z, CLEAR_PLAYER_NUMBERS_AND_DISPLAY
+
+;    CP 'p'
+;    CALL Z, TOGGLE_PAUSE
     CP '0'
     JR C, IN_GAME    ; A < '0'
     CP '8'
@@ -98,6 +107,16 @@ RET
 PUZZLE_DATA: DB 0
 RANDOM_NUMBER: DB 0
 PLAYER_NUMBERS: DB 0,0,0,0,0
+
+CLEAR_PLAYER_NUMBERS_AND_DISPLAY:
+    LD HL, PLAYER_NUMBERS
+    LD (HL), 0
+    LD DE, PLAYER_NUMBERS+1
+    LD BC, 4
+    LDIR
+    CALL DISPLAY_NUMBERS
+    CALL XOR_NUMBERS_TO_A
+    RET
 
 NEXT_PUZZLE:
     LD A, (PUZZLE_DATA)
@@ -196,13 +215,16 @@ SEARCH_NUMBER:
     LD HL, PLAYER_NUMBERS
     LD A, (HL)
     CP 0
-    RET NZ                     ; Ha az első sem üres, akkor nincs több hely, nem csinálunk semmit
+    JP NZ, FULL                     ; Ha az első sem üres, akkor nincs több hely, nem csinálunk semmit
     EX AF,AF'
     LD (HL), A
     RET
 DELETE_NUMBER_HL:
     LD A, 0
     LD (HL), A
+    RET
+FULL:
+    CALL SOUND_NO_SPACE
     RET
 
 DISPLAY_NUMBERS:
@@ -336,18 +358,19 @@ SHOW_HL_A:
 ;    LD ( 0x6D60 ), A     ; Enabled BTX write
 ;    RET
 
-include "lmo-config.asm"
-include "lmo-texts.asm"
-include "lmo-sort.asm"
-include "lmo-clock.asm"
-include "lmo-dhc4.asm"
-include "lmo-palette.asm"
+include "config.asm"
 include "lib/ROM.asm"
 include "lib/directKey.asm"
-; include "lib/directKeyWithPuffer.asm"
-; include "lib/directKey7220.asm"
+include "lib/sound.asm"
+include "inc/texts.asm"
+include "inc/dhc4.asm"
+include "inc/clock.asm"
 include "lib/hex.asm"
+include "inc/sort.asm"
+include "inc/palette.asm"
 include "inc/7segments.asm"
 include "inc/levels.asm"
 include "inc/helps.asm"
 include "inc/num10.asm"
+include "inc/information.asm"
+include "inc/sound.asm"

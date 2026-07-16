@@ -1,7 +1,11 @@
 # mupidgames
 Games for Mupid C2A2
 
-## Load
+Games for Mupid C2* computer
+- sokoban ( *sokoban# )
+- ledMatchOctal ( *lmo# )
+
+## Load example sokoban
 You can load it over any BTX server, example Norbert Kehrer's BTX server.
 If you use Norbert Kehrer's BTX server, 
 1 - copy btx/sokoban file into btx_server/pages, 
@@ -12,7 +16,7 @@ If you use Norbert Kehrer's BTX server,
 6 - Press Blue [K] key and after the C key and after 5 key (for 4800 bit/s communication speed)
 7 - Press Shift + top-right white key (direct next the red K key) for connect Mupid to BTX server
 8 - Press # (for skip btx_server bug)
-9 - Preess *sokoban# to load the world first Mupid game! :) Sokoban will start automatical after load.
+9 - Press *sokoban# to load the world first Mupid game! :) Sokoban will start automatical after load.
 10 - Play and enjoy it!
 
 In the btx_server directory contains Norbert Kehrer's btx_server.js corrected code for current nodejs version.
