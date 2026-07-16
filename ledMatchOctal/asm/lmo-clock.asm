@@ -1,0 +1,105 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; MUPID Led Match Octal CLOCK
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CLOCK_INIT:
+    LD BC, CLOCK_SIZE
+    CALL SEVSEG_SET_SIZE_BC
+    LD HL, CLOCK_H_POS
+    CALL SHOW_0_HL
+    CALL SHOW_0_HL
+    LD HL, CLOCK_M_POS
+    CALL SHOW_0_HL
+    CALL SHOW_0_HL
+    LD HL, CLOCK_S_POS
+    CALL SHOW_0_HL
+    CALL SHOW_0_HL
+    RET
+
+CLOCK_START:
+    LD HL, 0
+    LD (CLOCK_H), HL
+    LD (CLOCK_M), HL
+    LD (CLOCK_S), HL
+    LD (NMI_COUNTER), HL
+    CALL CLOCK_SHOW
+    RET
+
+CLOCK_CHECK:
+    LD A, (NMI_COUNTER)
+    CP 25
+    RET C
+    LD A, 0
+    LD (NMI_COUNTER), A
+    CALL CLOCK_STEP
+    RET
+
+CLOCK_STEP:
+    LD HL, SCRPOS ; H=X, L=Y [01-28,01-18]
+    CALL INC_BCD_COUNTERS
+    CALL CLOCK_SHOW
+    RET
+
+CLOCK_SHOW:
+    LD A, CLOCK_PALETTE
+    CALL SEVSEG_SET_ON_COLOR_PALETTE_A
+    LD BC, CLOCK_SIZE
+    CALL SEVSEG_SET_SIZE_BC
+    LD HL, CLOCK_H_POS
+    LD A, (CLOCK_H)
+    CALL RECOLOR_BCD2_HL_A
+    LD HL, CLOCK_M_POS
+    LD A, (CLOCK_M)
+    CALL RECOLOR_BCD2_HL_A
+    LD HL, CLOCK_S_POS
+    LD A, (CLOCK_S)
+    CALL RECOLOR_BCD2_HL_A
+    RET
+
+INC_BCD_COUNTERS:
+    LD A, (CLOCK_S)
+    ADD A, 1
+    DAA
+    LD (CLOCK_S), A
+    CP 60h
+    RET NZ
+    LD A, 0
+    LD (CLOCK_S), A
+    LD A, (CLOCK_M)
+    ADD A, 1
+    DAA
+    LD (CLOCK_M), A
+    CP 60h
+    RET NZ
+    LD A, 0
+    LD (CLOCK_M), A
+    LD A, (CLOCK_H)
+    ADD A, 1
+    DAA
+    LD (CLOCK_H), A
+    RET
+
+RECOLOR_BCD2_HL_A:
+    PUSH AF
+    RRA
+    RRA
+    RRA
+    RRA
+    CALL SEVSEG_CONVERT_HEX_NUMBER_A_TO_SEGMENTS_A
+    PUSH HL
+    CALL SEVSEG_RECOLOR_HL_A
+    POP HL
+    CALL SEVSEG_HL_NEXT_POS_HL
+    POP AF
+    PUSH HL
+    CALL SEVSEG_CONVERT_HEX_NUMBER_A_TO_SEGMENTS_A
+    CALL SEVSEG_RECOLOR_HL_A
+    POP HL
+    CALL SEVSEG_HL_NEXT_POS_HL
+    RET
+
+CLOCK_H: DW 0
+CLOCK_M: DW 0
+CLOCK_S: DW 0
+
+CLOCK_LAST_SEC: DB 0
